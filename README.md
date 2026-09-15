@@ -67,7 +67,10 @@ Deretter ble nettverket konfigurert med en fast IPv4-adresse:
 
 En fast IP-adresse ble brukt fordi serveren må kunne finnes på samme adresse hele tiden.
 
+![DC01 - IP-konfigurasjon](06-server-ipconfig.png)
+
 ---
+
 
 ### 2. Active Directory Domain Services
 
@@ -83,6 +86,10 @@ Det ble opprettet et domene med navnet:
 
 Active Directory brukes til sentral administrasjon av brukere, datamaskiner, grupper og rettigheter.
 
+![Server Manager - AD DS og DNS](01-server-manager-roles.png)
+
+![Active Directory - DC01 Domain Controller](02-active-directory-domain-controller.png)
+
 ---
 
 ### 3. DNS
@@ -96,7 +103,7 @@ DC01 bruker:
 som DNS-adresse.
 
 DNS er viktig i Active Directory fordi klientmaskiner må kunne finne domenet og Domain Controller ved hjelp av navn.
-
+![DNS Manager - firma.local](05-dns-manager-firma-local.png)
 ---
 
 ### 4. Opprettelse av domenebruker
@@ -112,7 +119,7 @@ Det ble opprettet en domenebruker:
 `ola.nordmann`
 
 Brukeren ble senere brukt for å teste pålogging på klientmaskinen.
-
+![Active Directory - domenebruker Ola Nordmann](03-active-directory-user-ola.png)
 ---
 
 ### 5. Oppsett av CLIENT-PC
@@ -130,7 +137,6 @@ Nettverksadapteren i VMware ble konfigurert som:
 `Bridged`
 
 Dette gjorde at CLIENT-PC kunne kommunisere på samme lokale nettverk som DC01.
-
 ---
 
 ### 6. Kontroll av klientens IP-adresse
@@ -150,6 +156,7 @@ DC01 hadde adressen:
 `192.168.0.10`
 
 Dette viste at serveren og klienten var på samme lokale nettverk.
+![CLIENT-PC - IP-konfigurasjon](07-client-ipconfig.png)
 
 ---
 
@@ -166,6 +173,7 @@ Resultatet viste:
 `Sent = 4, Received = 4, Lost = 0`
 
 Dette bekreftet at CLIENT-PC kunne kommunisere med serveren over nettverket.
+![Ping fra CLIENT-PC til DC01](08-client-ping-dc01.png)
 
 ---
 
@@ -202,6 +210,7 @@ testet om klienten kunne nå serveren gjennom nettverket.
 `nslookup firma.local`
 
 testet om DNS kunne finne domenet ved hjelp av navnet.
+![DNS-test - nslookup firma.local](09-client-nslookup-firma-local.png)
 
 ---
 
@@ -214,7 +223,6 @@ Etter at nettverk og DNS var kontrollert, ble CLIENT-PC koblet til domenet:
 Windows ba om brukernavn og passord til en konto som hadde tillatelse til å legge datamaskinen inn i domenet.
 
 Domain Join var vellykket, og Windows ba deretter om omstart.
-
 ---
 
 ### 11. Pålogging med domenebruker
@@ -258,6 +266,7 @@ var:
 registrert.
 
 Dette bekreftet at Active Directory kjente klientmaskinen som medlem av domenet.
+![CLIENT-PC registrert i domenet](04-client-pc-domain-member.png)
 
 ---
 
