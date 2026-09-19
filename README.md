@@ -1,10 +1,27 @@
 # Windows Server 2025 – Active Directory Lab
 
-## Om prosjektet
+Et praktisk Windows Server 2025-prosjekt med **Active Directory Domain Services (AD DS)**, **DNS** og en **Windows 11 Pro-klient**.
 
-I dette prosjektet satte jeg opp et lite Windows Server 2025-miljø med Active Directory Domain Services (AD DS), DNS og en Windows 11 Pro-klient.
+Målet med prosjektet var å lære hvordan en Windows Server kan brukes som **Domain Controller**, hvordan brukere og datamaskiner administreres sentralt, og hvordan en klientmaskin kobles til og bruker et Active Directory-domene.
 
-Målet var å lære hvordan en Windows Server kan brukes som Domain Controller, hvordan brukere og datamaskiner administreres sentralt, og hvordan en klientmaskin kobles til et Active Directory-domene.
+---
+
+## Prosjektoversikt
+
+I labmiljøet ble følgende satt opp og testet:
+
+- Windows Server 2025
+- Active Directory Domain Services
+- Domain Controller
+- DNS
+- Domenet `firma.local`
+- Domenebruker
+- Windows 11 Pro-klient
+- Nettverkskommunikasjon mellom klient og server
+- DNS-oppslag
+- Domain Join
+- Pålogging med domenebruker
+- Registrering av klientmaskinen i Active Directory
 
 ---
 
@@ -12,22 +29,26 @@ Målet var å lære hvordan en Windows Server kan brukes som Domain Controller, 
 
 ### Server
 
-- Operativsystem: Windows Server 2025
-- Servernavn: DC01
-- Domene: `firma.local`
-- IPv4-adresse: `192.168.0.10`
-- Subnet mask: `255.255.255.0`
-- Default gateway: `192.168.0.1`
-- DNS-server: `192.168.0.10`
+| Komponent | Konfigurasjon |
+|---|---|
+| Operativsystem | Windows Server 2025 |
+| Servernavn | DC01 |
+| Domene | `firma.local` |
+| IPv4-adresse | `192.168.0.10` |
+| Subnet mask | `255.255.255.0` |
+| Default gateway | `192.168.0.1` |
+| DNS-server | `192.168.0.10` |
 
 ### Klient
 
-- Operativsystem: Windows 11 Pro
-- Maskinnavn: CLIENT-PC
-- Plattform: VMware Workstation
-- IPv4: DHCP
-- DNS-server: `192.168.0.10`
-- Domene: `firma.local`
+| Komponent | Konfigurasjon |
+|---|---|
+| Operativsystem | Windows 11 Pro |
+| Maskinnavn | CLIENT-PC |
+| Plattform | VMware Workstation |
+| IPv4 | DHCP |
+| DNS-server | `192.168.0.10` |
+| Domene | `firma.local` |
 
 ---
 
@@ -49,228 +70,343 @@ Router
 
 ---
 
-## Gjennomføring
+## Designvalg og begrunnelse
 
-### 1. Installasjon og grunnoppsett av server
+### Statisk IP på DC01
+
+DC01 fikk en fast IPv4-adresse:
+
+```text
+192.168.0.10
+```
+
+En Domain Controller bør være tilgjengelig på en stabil adresse fordi klientmaskiner og domenetjenester må kunne finne serveren på samme IP-adresse over tid.
+
+### DC01 som DNS-server
+
+CLIENT-PC ble konfigurert til å bruke:
+
+```text
+192.168.0.10
+```
+
+som DNS-server.
+
+Dette er viktig i et Active Directory-miljø fordi klienten må kunne finne domenet og Domain Controller ved hjelp av DNS.
+
+### Windows 11 Pro som klient
+
+Windows 11 Pro ble brukt fordi denne utgaven støtter tilkobling til et Active Directory-domene.
+
+### Bridged nettverk i VMware
+
+Nettverksadapteren på CLIENT-PC ble konfigurert som:
+
+```text
+Bridged
+```
+
+Dette gjorde at CLIENT-PC kunne kommunisere på samme lokale nettverk som DC01.
+
+---
+
+# Gjennomføring
+
+## 1. Installasjon og grunnoppsett av server
 
 Windows Server 2025 ble installert på servermaskinen.
 
 Serveren fikk navnet:
 
-`DC01`
+```text
+DC01
+```
 
-Deretter ble nettverket konfigurert med en fast IPv4-adresse:
+Deretter ble nettverket konfigurert med:
 
-- IP-adresse: `192.168.0.10`
-- Subnet mask: `255.255.255.0`
-- Default gateway: `192.168.0.1`
+```text
+IP-adresse:      192.168.0.10
+Subnet mask:     255.255.255.0
+Default gateway: 192.168.0.1
+DNS-server:      192.168.0.10
+```
 
-En fast IP-adresse ble brukt fordi serveren må kunne finnes på samme adresse hele tiden.
-
-![DC01 - IP-konfigurasjon](06-server-ipconfig.png)
-
----
-
-
-### 2. Active Directory Domain Services
-
-Rollen Active Directory Domain Services (AD DS) ble installert gjennom:
-
-`Server Manager → Manage → Add Roles and Features`
-
-Etter installasjonen ble serveren promotert til Domain Controller.
-
-Det ble opprettet et domene med navnet:
-
-`firma.local`
-
-Active Directory brukes til sentral administrasjon av brukere, datamaskiner, grupper og rettigheter.
-
-![Server Manager - AD DS og DNS](01-server-manager-roles.png)
-
-![Active Directory - DC01 Domain Controller](02-active-directory-domain-controller.png)
+![DC01 - IP-konfigurasjon](screenshots/06-server-ipconfig.png)
 
 ---
 
-### 3. DNS
+## 2. Active Directory Domain Services
+
+Rollen **Active Directory Domain Services (AD DS)** ble installert gjennom:
+
+```text
+Server Manager → Manage → Add Roles and Features
+```
+
+Etter installasjonen ble serveren promotert til **Domain Controller**.
+
+Domenet som ble opprettet var:
+
+```text
+firma.local
+```
+
+Active Directory brukes til sentral administrasjon av blant annet brukere, datamaskiner, grupper og rettigheter.
+
+![Server Manager - AD DS og DNS](screenshots/01-server-manager-roles.png)
+
+![Active Directory - DC01 Domain Controller](screenshots/02-active-directory-domain-controller.png)
+
+---
+
+## 3. DNS
 
 DNS ble konfigurert på DC01.
 
 DC01 bruker:
 
-`192.168.0.10`
+```text
+192.168.0.10
+```
 
 som DNS-adresse.
 
 DNS er viktig i Active Directory fordi klientmaskiner må kunne finne domenet og Domain Controller ved hjelp av navn.
-![DNS Manager - firma.local](05-dns-manager-firma-local.png)
+
+![DNS Manager - firma.local](screenshots/05-dns-manager-firma-local.png)
+
 ---
 
-### 4. Opprettelse av domenebruker
+## 4. Opprettelse av domenebruker
 
-Verktøyet:
+Følgende verktøy ble brukt:
 
-`Server Manager → Tools → Active Directory Users and Computers`
-
-ble brukt for å administrere Active Directory.
+```text
+Server Manager → Tools → Active Directory Users and Computers
+```
 
 Det ble opprettet en domenebruker:
 
-`ola.nordmann`
+```text
+ola.nordmann
+```
 
 Brukeren ble senere brukt for å teste pålogging på klientmaskinen.
-![Active Directory - domenebruker Ola Nordmann](03-active-directory-user-ola.png)
+
+![Active Directory - domenebruker Ola Nordmann](screenshots/03-active-directory-user-ola.png)
+
 ---
 
-### 5. Oppsett av CLIENT-PC
+## 5. Oppsett av CLIENT-PC
 
-For å teste domenet ble det opprettet en virtuell klientmaskin i VMware Workstation.
+Det ble opprettet en virtuell klientmaskin i VMware Workstation.
 
 Maskinen fikk navnet:
 
-`CLIENT-PC`
+```text
+CLIENT-PC
+```
 
-Windows 11 Pro ble installert fordi denne versjonen støtter tilkobling til et Active Directory-domene.
+Windows 11 Pro ble installert som klientoperativsystem.
 
-Nettverksadapteren i VMware ble konfigurert som:
+Nettverksadapteren ble konfigurert som:
 
-`Bridged`
+```text
+Bridged
+```
 
-Dette gjorde at CLIENT-PC kunne kommunisere på samme lokale nettverk som DC01.
+Dette gjorde at klienten kunne kommunisere med DC01 på samme lokale nettverk.
+
 ---
 
-### 6. Kontroll av klientens IP-adresse
+## 6. Kontroll av klientens IP-adresse
 
 På CLIENT-PC ble følgende kommando brukt:
 
-`ipconfig`
+```powershell
+ipconfig
+```
 
-Klienten fikk blant annet:
+Klienten fikk:
 
-- IPv4-adresse: `192.168.0.101`
-- Subnet mask: `255.255.255.0`
-- Default gateway: `192.168.0.1`
+```text
+IPv4-adresse:    192.168.0.101
+Subnet mask:     255.255.255.0
+Default gateway: 192.168.0.1
+```
 
 DC01 hadde adressen:
 
-`192.168.0.10`
+```text
+192.168.0.10
+```
 
 Dette viste at serveren og klienten var på samme lokale nettverk.
-![CLIENT-PC - IP-konfigurasjon](07-client-ipconfig.png)
+
+![CLIENT-PC - IP-konfigurasjon](screenshots/07-client-ipconfig.png)
 
 ---
 
-### 7. Test av kommunikasjon
+## 7. Test av kommunikasjon
 
 Fra CLIENT-PC ble forbindelsen til DC01 testet med:
 
-`ping 192.168.0.10`
+```powershell
+ping 192.168.0.10
+```
 
 Testen var vellykket.
 
 Resultatet viste:
 
-`Sent = 4, Received = 4, Lost = 0`
+```text
+Sent = 4, Received = 4, Lost = 0
+```
 
-Dette bekreftet at CLIENT-PC kunne kommunisere med serveren over nettverket.
-![Ping fra CLIENT-PC til DC01](08-client-ping-dc01.png)
+Dette bekreftet at CLIENT-PC kunne kommunisere med DC01 over nettverket.
 
----
-
-### 8. DNS-konfigurasjon på CLIENT-PC
-
-CLIENT-PC fikk IP-adressen automatisk via DHCP.
-
-DNS-serveren ble deretter endret manuelt til:
-
-`192.168.0.10`
-
-Dette betyr at CLIENT-PC bruker DNS-tjenesten på DC01 når den skal finne domenet og Active Directory-tjenester.
+![Ping fra CLIENT-PC til DC01](screenshots/08-client-ping-dc01.png)
 
 ---
 
-### 9. Test av DNS
+## 8. DNS-konfigurasjon på CLIENT-PC
+
+CLIENT-PC fikk IPv4-adressen automatisk via DHCP.
+
+DNS-serveren ble konfigurert til:
+
+```text
+192.168.0.10
+```
+
+Dette betyr at klienten bruker DNS-tjenesten på DC01 for å finne domenet og Active Directory-tjenester.
+
+---
+
+## 9. Test av DNS
 
 DNS ble testet fra CLIENT-PC med:
 
-`nslookup firma.local`
+```powershell
+nslookup firma.local
+```
 
 Resultatet viste:
 
-`firma.local → 192.168.0.10`
+```text
+firma.local → 192.168.0.10
+```
 
 Dette bekreftet at CLIENT-PC kunne finne domenet ved hjelp av DNS på DC01.
 
-Forskjellen mellom testene var:
+Forskjellen mellom de to testene var:
 
-`ping 192.168.0.10`
+```powershell
+ping 192.168.0.10
+```
 
-testet om klienten kunne nå serveren gjennom nettverket.
+tester om klienten kan nå serverens IP-adresse.
 
-`nslookup firma.local`
+```powershell
+nslookup firma.local
+```
 
-testet om DNS kunne finne domenet ved hjelp av navnet.
-![DNS-test - nslookup firma.local](09-client-nslookup-firma-local.png)
+tester om DNS kan oversette domenenavnet til riktig IP-adresse.
+
+![DNS-test - nslookup firma.local](screenshots/09-client-nslookup-firma-local.png)
 
 ---
 
-### 10. Domain Join
+## 10. Domain Join
 
-Etter at nettverk og DNS var kontrollert, ble CLIENT-PC koblet til domenet:
+Etter at nettverk og DNS var kontrollert, ble CLIENT-PC koblet til:
 
-`firma.local`
+```text
+firma.local
+```
 
-Windows ba om brukernavn og passord til en konto som hadde tillatelse til å legge datamaskinen inn i domenet.
+Windows ba om legitimasjon til en konto med tillatelse til å legge datamaskinen inn i domenet.
 
-Domain Join var vellykket, og Windows ba deretter om omstart.
+Domain Join var vellykket, og klientmaskinen ble deretter startet på nytt.
+
 ---
 
-### 11. Pålogging med domenebruker
+## 11. Pålogging med domenebruker
 
 Etter omstart ble:
 
-`Annen bruker`
+```text
+Annen bruker
+```
 
 valgt på innloggingsskjermen.
 
-CLIENT-PC viste at maskinen kunne logge på domenet:
+CLIENT-PC viste domenet:
 
-`FIRMA`
+```text
+FIRMA
+```
 
-Det ble deretter logget inn med domenebrukeren:
+Det ble logget inn med:
 
-`FIRMA\ola.nordmann`
+```text
+FIRMA\ola.nordmann
+```
 
 Påloggingen var vellykket.
 
-Dette bekreftet at CLIENT-PC kunne kommunisere med Domain Controller og bruke en konto som var opprettet i Active Directory.
+Dette bekreftet at CLIENT-PC kunne kommunisere med Domain Controller og bruke en konto fra Active Directory.
 
 ---
 
-### 12. Kontroll i Active Directory
+## 12. Kontroll i Active Directory
 
-Til slutt ble:
+Til slutt ble følgende åpnet på DC01:
 
-`Server Manager → Tools → Active Directory Users and Computers`
-
-åpnet på DC01.
+```text
+Server Manager → Tools → Active Directory Users and Computers
+```
 
 Under:
 
-`firma.local → Computers`
+```text
+firma.local → Computers
+```
 
 var:
 
-`CLIENT-PC`
+```text
+CLIENT-PC
+```
 
 registrert.
 
-Dette bekreftet at Active Directory kjente klientmaskinen som medlem av domenet.
-![CLIENT-PC registrert i domenet](04-client-pc-domain-member.png)
+Dette bekreftet at klientmaskinen var medlem av domenet og registrert som et datamaskinobjekt i Active Directory.
+
+![CLIENT-PC registrert i domenet](screenshots/04-client-pc-domain-member.png)
 
 ---
 
-## Resultat
+# Validering
+
+Prosjektet ble kontrollert fra både server- og klientsiden.
+
+| Test | Resultat |
+|---|---|
+| DC01 har statisk IP | Bestått |
+| AD DS installert | Bestått |
+| Domain Controller opprettet | Bestått |
+| Domenet `firma.local` opprettet | Bestått |
+| Domenebruker opprettet | Bestått |
+| CLIENT-PC og DC01 kommuniserer | Bestått |
+| DNS-oppslag mot `firma.local` | Bestått |
+| CLIENT-PC meldt inn i domenet | Bestått |
+| Domenebruker kan logge inn | Bestått |
+| CLIENT-PC registrert i Active Directory | Bestått |
+
+---
+
+# Resultat
 
 Prosjektet resulterte i et fungerende Windows Server 2025-miljø med Active Directory og DNS.
 
@@ -294,7 +430,7 @@ Følgende ble gjennomført:
 
 ---
 
-## Hva jeg lærte
+# Hva jeg lærte
 
 Gjennom prosjektet lærte jeg hvordan flere deler av et Windows Server-miljø arbeider sammen.
 
@@ -304,11 +440,11 @@ En IP-adresse identifiserer en enhet på nettverket.
 
 I prosjektet:
 
-`DC01 = 192.168.0.10`
-
-`CLIENT-PC = 192.168.0.101`
-
-`Router = 192.168.0.1`
+```text
+DC01      = 192.168.0.10
+CLIENT-PC = 192.168.0.101
+Router    = 192.168.0.1
+```
 
 ### Statisk IP
 
@@ -316,9 +452,9 @@ DC01 fikk en statisk IP-adresse fordi adressen til serveren ikke bør endres.
 
 ### DHCP
 
-CLIENT-PC fikk IP-adressen automatisk.
+CLIENT-PC fikk IPv4-adressen automatisk via DHCP.
 
-Dette gjøres ved hjelp av DHCP.
+I dette prosjektet ble DHCP brukt på klienten for automatisk adressekonfigurasjon, mens hovedfokuset var AD DS, DNS og Domain Join.
 
 ### Default Gateway
 
@@ -326,7 +462,9 @@ Default Gateway er veien fra det lokale nettverket til andre nettverk.
 
 I prosjektet var routeren:
 
-`192.168.0.1`
+```text
+192.168.0.1
+```
 
 ### DNS
 
@@ -334,13 +472,15 @@ DNS brukes til å finne maskiner og tjenester ved hjelp av navn.
 
 CLIENT-PC brukte:
 
-`192.168.0.10`
+```text
+192.168.0.10
+```
 
 som DNS-server.
 
 ### Active Directory
 
-Active Directory brukes til sentral administrasjon av brukere, datamaskiner, grupper og rettigheter.
+Active Directory brukes til sentral administrasjon av blant annet brukere, datamaskiner, grupper og rettigheter.
 
 ### Domain
 
@@ -348,15 +488,19 @@ Et domene samler brukere og datamaskiner i et sentralt administrert miljø.
 
 Domenet i prosjektet var:
 
-`firma.local`
+```text
+firma.local
+```
 
 ### Domain Controller
 
-En Domain Controller administrerer domenet og kontrollerer domenebrukere og domenemaskiner.
+En Domain Controller administrerer domenet og håndterer autentisering og domenetjenester.
 
 I prosjektet var:
 
-`DC01`
+```text
+DC01
+```
 
 Domain Controller.
 
@@ -366,13 +510,17 @@ En lokal bruker finnes bare på den lokale datamaskinen.
 
 Eksempel:
 
-`LocalAdmin`
+```text
+LocalAdmin
+```
 
-En domenebruker finnes i Active Directory.
+En domenebruker administreres i Active Directory.
 
 Eksempel:
 
-`FIRMA\ola.nordmann`
+```text
+FIRMA\ola.nordmann
+```
 
 ### Workgroup og Domain
 
@@ -382,41 +530,101 @@ En maskin som er medlem av et Domain kan administreres sentralt gjennom Active D
 
 ---
 
-## Kommandoer brukt i prosjektet
+# Viktige kommandoer
 
 Kontroll av nettverksinformasjon:
 
-`ipconfig`
+```powershell
+ipconfig
+```
 
 Test av forbindelse mellom CLIENT-PC og DC01:
 
-`ping 192.168.0.10`
+```powershell
+ping 192.168.0.10
+```
 
 Test av DNS:
 
-`nslookup firma.local`
+```powershell
+nslookup firma.local
+```
 
 ---
 
-## Dokumentasjon
+# Labmiljø sammenlignet med produksjon
 
-Repositoryet skal også inneholde skjermbilder fra viktige deler av prosjektet, blant annet:
+Dette prosjektet er et mindre opplæringsmiljø.
 
-- Server Manager
+I et større produksjonsmiljø ville man normalt vurdert blant annet:
+
+- flere Domain Controllers for redundans
+- backup og restore-rutiner
+- Group Policy for sentral konfigurasjon
+- strengere administrative rettigheter
+- overvåking og logging
+- patching og vedlikehold
+- nettverkssegmentering
+- dokumenterte sikkerhetsrutiner
+
+Labmiljøet fokuserer på grunnleggende Active Directory-, DNS- og Domain Join-funksjonalitet.
+
+---
+
+# Kompetanse demonstrert
+
+Prosjektet viser praktisk erfaring med:
+
+- Windows Server 2025
+- Active Directory Domain Services
+- Domain Controller
 - Active Directory Users and Computers
 - DNS
-- nettverkskonfigurasjon
-- `ipconfig`
-- `ping 192.168.0.10`
-- `nslookup firma.local`
+- Statisk IPv4-konfigurasjon
+- Windows 11 Pro
+- VMware Workstation
 - Domain Join
-- domenepålogging
-- CLIENT-PC registrert under Computers i Active Directory
+- Domenebrukere
+- Nettverkstesting med `ping`
+- DNS-testing med `nslookup`
+- Klient- og servervalidering
+- Teknisk dokumentasjon
 
 ---
 
-## Konklusjon
+# Repository-struktur
 
-Gjennom prosjektet fikk jeg praktisk erfaring med Windows Server 2025, nettverk, DNS og Active Directory.
+```text
+windows-server-2025-ad-lab/
+|
+|-- README.md
+|
+`-- screenshots/
+    |-- 01-server-manager-roles.png
+    |-- 02-active-directory-domain-controller.png
+    |-- 03-active-directory-user-ola.png
+    |-- 04-client-pc-domain-member.png
+    |-- 05-dns-manager-firma-local.png
+    |-- 06-server-ipconfig.png
+    |-- 07-client-ipconfig.png
+    |-- 08-client-ping-dc01.png
+    `-- 09-client-nslookup-firma-local.png
+```
 
-Jeg lærte hvordan en Domain Controller settes opp, hvordan DNS brukes for å finne domenet, hvordan brukere opprettes og administreres sentralt, og hvordan en Windows 11 Pro-klient kobles til og logger inn i et Active Directory-domene.
+Skjermbildene lagres i `screenshots/` og vises direkte under de relevante stegene i denne README-filen.
+
+---
+
+# Sikkerhet
+
+Ingen passord eller andre sensitive autentiseringsopplysninger er inkludert i repositoryet.
+
+IP-adressene og domenenavnet som vises her tilhører labmiljøet.
+
+---
+
+# Prosjektstatus
+
+**Fullført**
+
+Prosjektet demonstrerer et grunnleggende Windows Server 2025-domene fra serveroppsett og Active Directory til DNS-testing, Domain Join og pålogging med domenebruker.
